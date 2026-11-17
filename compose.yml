@@ -1,0 +1,12 @@
+services:
+  pressbar:
+    build: .
+    image: pressbar:demo
+    container_name: pressbar
+    # host:container - der rechte Port muss zu PORT in .env passen (8099).
+    ports:
+      - "8099:8099"
+    # .env eingehaengt: Passwort/Flags aendern ohne Rebuild.
+    volumes:
+      - ./.env:/app/.env:ro
+    restart: unless-stopped

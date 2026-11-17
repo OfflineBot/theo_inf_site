@@ -1,5 +1,5 @@
 """
-Scharfsinn - absichtlich verwundbarer Demo-Shop fuer eine Hacking-Praesentation.
+Pressbar - absichtlich verwundbarer Demo-Shop fuer eine Hacking-Praesentation.
 
 Nur Standardbibliothek: http.server + sqlite3. Starten mit `python3 app.py`.
 
@@ -44,21 +44,28 @@ CFG = load_env()
 
 # --------------------------------------------------------------------------- #
 # Produkte (reiner Shop-Inhalt, keine Angriffsflaeche)
-# Tuple: (Name, Untertitel, Preis, Schaerfe 1-5, Beschreibung)
+# Tuple: (Name, Zutaten, Preis, Groesse, Farbe-oben, Farbe-unten, Beschreibung)
+# Die Farben stehen stellvertretend fuer das Produktfoto (Saftfarbe im Glas).
 # --------------------------------------------------------------------------- #
 PRODUCTS = [
-    ("Dorfbrand", "Habanero, Mango, zu viel Mut", "8,90", 3,
-     "Faengt harmlos an, bleibt dann aber. Auf Ruehrei getestet, Nachbarn haben geklopft."),
-    ("Nachbars Rache", "Jalapeno & geroesteter Knoblauch", "7,50", 2,
-     "Die milde unter den scharfen. Geht auf alles, sogar auf Leute die 'eigentlich nichts Scharfes' essen."),
-    ("Stiller Reflux", "Ghost Pepper, Limette, Reue", "11,20", 4,
-     "Kleiner Loeffel reicht. Grosser Loeffel ist eine Lebensentscheidung."),
-    ("Oma's Geheimnis", "geraeucherte Paprika, mild", "6,40", 1,
-     "Null Schaerfe, viel Geschmack. Fuer die Tischhaelfte die sonst nur meckert."),
-    ("Betriebsausflug", "Chipotle, Tomate, dunkles Bier", "9,10", 3,
-     "Rauchig und breit. Passt zu Burgern und zu schlechten Entscheidungen am Grill."),
-    ("Letzte Mahnung", "Carolina Reaper, pur", "14,00", 5,
-     "Wir haben dich gewarnt. Es steht sogar auf dem Etikett. Zweimal."),
+    ("Grüner Montag", "Apfel, Gurke, Spinat, Ingwer", "5,90", "330 ml",
+     "#94d82d", "#2f9e44",
+     "Schmeckt grüner als er klingt. Der Klassiker, wenn das Wochenende lang war."),
+    ("Roter Kopf", "Rote Bete, Apfel, Zitrone", "5,50", "330 ml",
+     "#f06595", "#a61e4d",
+     "Erdig, süß, ein bisschen frech. Färbt alles, auch deine gute Laune."),
+    ("Sonntagskind", "Orange, Karotte, Kurkuma", "5,90", "330 ml",
+     "#ffa94d", "#e8590c",
+     "Sonne in flüssig. Mit Kurkuma, damit es sich gesund anfühlt."),
+    ("Blaue Stunde", "Heidelbeere, Holunder, Traube", "6,20", "330 ml",
+     "#9775fa", "#5f3dc4",
+     "Dunkel und ruhig. Die Sorte für abends, wenn keiner mehr hinschaut."),
+    ("Wachmacher", "Ingwer, Zitrone, Cayenne, Apfel", "4,90", "250 ml",
+     "#ffe066", "#f59f00",
+     "Kleiner Shot, große Wirkung. Trifft genau zwischen die Augen."),
+    ("Kokosnacht", "Kokos, Banane, Dattel", "6,40", "330 ml",
+     "#f1e3d3", "#c2a07a",
+     "Cremig, ohne Milch. Fühlt sich an wie Urlaub, ist aber nur Frühstück."),
 ]
 
 
@@ -108,7 +115,7 @@ STYLE = """
   --text:#cdd6f4; --subtext0:#a6adc8;
   --mauve:#cba6f7; --red:#f38ba8; --green:#a6e3a1;
   --yellow:#f9e2af; --blue:#89b4fa;
-  --maxw:1040px;
+  --pad:clamp(18px,4vw,72px);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -118,19 +125,17 @@ body{margin:0;background:var(--base);color:var(--text);
 a{color:var(--mauve);text-decoration:none}
 a:hover{text-decoration:underline}
 
-/* Ankuendigungsstreifen */
 .ribbon{background:var(--crust);color:var(--subtext0);font-size:12.5px;
   letter-spacing:.3px;text-align:center;padding:7px 16px;
   border-bottom:1px solid var(--surface0)}
 
-/* Kopf / Navigation */
 header{position:sticky;top:0;z-index:20;background:rgba(24,24,37,.85);
   backdrop-filter:blur(10px);border-bottom:1px solid var(--surface0)}
-.bar{max-width:var(--maxw);margin:0 auto;padding:14px 20px;display:flex;
-  align-items:center;gap:22px}
-.brand{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px;
-  display:flex;align-items:baseline;gap:9px}
-.brand b{color:var(--mauve);font-weight:800}
+.bar{width:100%;padding:14px var(--pad);display:flex;align-items:center;gap:22px}
+.brand{font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.4px;
+  display:flex;align-items:center;gap:10px}
+.brand .mark{width:22px;height:22px;border-radius:50%;
+  background:conic-gradient(from 210deg,#94d82d,#ffa94d,#f06595,#9775fa,#94d82d)}
 .brand small{font-size:11px;font-weight:600;color:var(--overlay0);
   text-transform:uppercase;letter-spacing:1.2px}
 nav{margin-left:auto;display:flex;align-items:center;gap:6px}
@@ -145,57 +150,54 @@ nav a.navlink:hover{color:var(--text);background:var(--surface0);text-decoration
   padding:8px 15px;border-radius:8px;margin-left:4px}
 .loginbtn:hover{text-decoration:none;filter:brightness(1.07)}
 
-main{max-width:var(--maxw);margin:0 auto;padding:0 20px 72px}
+main{width:100%;padding:0 var(--pad) 72px}
 
-/* Hero */
-.hero{padding:62px 0 40px;border-bottom:1px solid var(--surface0);margin-bottom:40px;
-  position:relative}
+/* Hero - bewusst knapp gehalten */
+.hero{padding:70px 0 44px;margin-bottom:40px;position:relative}
 .hero::after{content:"";position:absolute;inset:0;z-index:-1;
-  background:radial-gradient(70% 120% at 85% -10%,rgba(203,166,247,.14),transparent 60%)}
+  background:radial-gradient(60% 130% at 82% -20%,rgba(151,117,250,.16),transparent 55%),
+             radial-gradient(50% 120% at 8% 10%,rgba(148,216,45,.10),transparent 55%)}
 .kicker{display:inline-block;font-size:12px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;color:var(--mauve);margin:0 0 14px}
-.hero h1{font-size:clamp(32px,5vw,50px);line-height:1.08;margin:0 0 18px;
-  letter-spacing:-1px;max-width:16ch;font-weight:800}
-.hero h1 em{font-style:normal;color:var(--mauve)}
-.lead{color:var(--subtext0);font-size:17px;margin:0;max-width:56ch}
-.lead a{font-weight:600}
-.hero-meta{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:26px;
-  color:var(--overlay0);font-size:13.5px}
-.hero-meta span.dot{color:var(--surface1)}
+  text-transform:uppercase;color:var(--mauve);margin:0 0 16px}
+.hero h1{font-size:clamp(38px,6vw,68px);line-height:1.02;margin:0 0 14px;
+  letter-spacing:-1.5px;font-weight:800}
+.hero .lead{color:var(--subtext0);font-size:18px;margin:0 0 26px;max-width:46ch}
+.hero .btn{font-size:15px}
 
-/* Abschnittskopf */
 .section-head{display:flex;align-items:baseline;gap:14px;margin:0 0 22px;
   scroll-margin-top:84px}
 .section-head h2{font-size:24px;margin:0;font-weight:800;letter-spacing:-.4px}
 .section-head .count{margin-left:auto;color:var(--overlay0);font-size:13px}
 
-/* Produktgitter */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
-.card{background:var(--mantle);border:1px solid var(--surface0);border-radius:14px;
-  padding:20px;display:flex;flex-direction:column;gap:10px;
+/* Produktgitter - fuellt die volle Breite */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px}
+.card{background:var(--mantle);border:1px solid var(--surface0);border-radius:16px;
+  overflow:hidden;display:flex;flex-direction:column;
   transition:transform .14s ease,border-color .14s ease}
 .card:hover{transform:translateY(-3px);border-color:var(--surface1)}
+.thumb{position:relative;height:150px;overflow:hidden}
+.thumb::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(160deg,rgba(255,255,255,.28),transparent 42%)}
+.thumb .size{position:absolute;top:10px;right:10px;background:rgba(17,17,27,.55);
+  color:#fff;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;
+  backdrop-filter:blur(2px)}
+.card-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:7px;flex:1}
 .card-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.card-top h3{margin:0;font-size:18.5px;font-weight:700}
-.price{font-weight:800;color:var(--green);font-size:16px;white-space:nowrap;
+.card-top h3{margin:0;font-size:18px;font-weight:700}
+.price{font-weight:800;color:var(--green);font-size:15.5px;white-space:nowrap;
   font-variant-numeric:tabular-nums}
-.card .sub{color:var(--mauve);font-size:13px;font-weight:600}
-.card p{margin:2px 0 0;font-size:14px;color:var(--subtext0);flex:1}
+.card .sub{color:var(--mauve);font-size:12.5px;font-weight:600}
+.card p{margin:2px 0 0;font-size:13.5px;color:var(--subtext0);flex:1}
 .card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  margin-top:8px;padding-top:14px;border-top:1px solid var(--surface0)}
-.heat{display:flex;align-items:center;gap:9px}
-.heat-label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+  margin-top:12px}
+.rohkost{font-size:11px;text-transform:uppercase;letter-spacing:.6px;
   color:var(--overlay0)}
-.pips{display:inline-flex;gap:4px}
-.pip{width:8px;height:8px;border-radius:2px;background:var(--surface1);transform:rotate(45deg)}
-.pip.on{background:var(--red)}
 .add{background:var(--surface0);color:var(--text);border:1px solid var(--surface1);
-  font-weight:600;font-size:13.5px;padding:8px 14px;border-radius:9px;cursor:pointer;
+  font-weight:600;font-size:13.5px;padding:8px 15px;border-radius:9px;cursor:pointer;
   font-family:inherit;transition:background .12s ease}
 .add:hover{background:var(--mauve);color:var(--crust);border-color:var(--mauve)}
 .add:active{transform:translateY(1px)}
 
-/* Formulare / Login */
 h1{font-size:28px;margin:34px 0 6px;letter-spacing:-.4px}
 h1.denied{color:var(--red)}
 .page-lead{color:var(--subtext0);margin:0 0 24px;max-width:60ch}
@@ -211,7 +213,6 @@ input:focus{outline:2px solid var(--mauve);outline-offset:0;border-color:var(--m
   font-size:15px;font-family:inherit}
 .btn:hover{text-decoration:none;filter:brightness(1.07)}
 
-/* Hinweise, Flags, Tabellen, Admin */
 .note{background:var(--surface0);border-left:3px solid var(--blue);padding:11px 15px;
   border-radius:0 9px 9px 0;margin:16px 0;font-size:14.5px}
 .note.err{border-left-color:var(--red)}
@@ -230,15 +231,14 @@ td code{font-family:ui-monospace,monospace;color:var(--yellow)}
 .pill.admin{background:var(--mauve);color:var(--crust);font-weight:700}
 .dash{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;
   margin-top:18px}
-.dash a.card{display:flex;flex-direction:column;gap:4px}
+.dash a.card{display:flex;flex-direction:column;gap:4px;padding:18px 20px}
 .dash a.card:hover{text-decoration:none}
 .dash h3{margin:0;font-size:17px}
 .dash .sub{color:var(--overlay0)}
 
-footer{max-width:var(--maxw);margin:0 auto;padding:26px 20px;color:var(--overlay0);
+footer{width:100%;padding:26px var(--pad);color:var(--overlay0);
   font-size:13px;border-top:1px solid var(--surface0)}
 
-/* Toast */
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);
   background:var(--surface0);color:var(--text);border:1px solid var(--surface1);
   padding:11px 18px;border-radius:10px;font-size:14px;font-weight:600;
@@ -273,23 +273,23 @@ def layout(title, body, session=None):
         "<!doctype html><html lang=de data-theme=dark><head>"
         "<meta charset=utf-8>"
         "<meta name=viewport content='width=device-width,initial-scale=1'>"
-        f"<title>{html.escape(title)} &ndash; Scharfsinn</title>"
+        f"<title>{html.escape(title)} &ndash; Pressbar</title>"
         f"<style>{STYLE}</style></head><body>"
-        "<div class=ribbon>Kleine Manufaktur &middot; Versand Mo&ndash;Mi, wenn das "
-        "Wetter passt &middot; zahl bar oder per Ueberweisung</div>"
+        "<div class=ribbon>Kaltgepresst in der Markthalle &middot; Lieferung Di &amp; Fr "
+        "&middot; Pfand aufs Glas</div>"
         "<header><div class=bar>"
-        "<a class=brand href='/'>Scharf<b>sinn</b> <small>Soßenlager</small></a>"
+        "<a class=brand href='/'><span class=mark></span>Pressbar "
+        "<small>Kaltpresse</small></a>"
         "<nav>"
         "<a class=navlink href='/'>Start</a>"
-        "<a class=navlink href='/#sortiment'>Sortiment</a>"
+        "<a class=navlink href='/#sortiment'>Sorten</a>"
         "<span class=cart>Korb <b id=korb>0</b></span>"
         f"{acct}"
         "</nav>"
         "</div></header><main>"
         + body +
-        "</main><footer>Scharfsinn GbR &middot; Lager hinterm Bahndamm &middot; "
-        "Rueckgabe sinnlos, ist ja aufgegessen. "
-        "Demo-Shop fuer Lehrzwecke.</footer>"
+        "</main><footer>Pressbar GbR &middot; Markthalle, Stand 12 &middot; "
+        "Glas zurueck = 1&nbsp;&euro; Pfand. Demo-Shop fuer Lehrzwecke.</footer>"
         "<div id=toast class=toast></div>"
         f"<script>{CART_JS}</script>"
         "</body></html>"
@@ -299,48 +299,36 @@ def layout(title, body, session=None):
 # --------------------------------------------------------------------------- #
 # Seiten
 # --------------------------------------------------------------------------- #
-def heat_pips(level):
-    pips = "".join(
-        f"<span class='pip{' on' if i < level else ''}'></span>" for i in range(5)
-    )
-    return f"<span class=pips>{pips}</span>"
-
-
 def page_home(session):
     cards = ""
-    for name, sub, price, heat, desc in PRODUCTS:
+    for name, zutaten, price, size, c1, c2, desc in PRODUCTS:
         cards += (
             "<article class=card>"
+            f"<div class=thumb style='background:linear-gradient(150deg,{c1},{c2})'>"
+            f"<span class=size>{html.escape(size)}</span></div>"
+            "<div class=card-body>"
             "<div class=card-top>"
             f"<h3>{html.escape(name)}</h3>"
             f"<span class=price>{html.escape(price)}&nbsp;&euro;</span>"
             "</div>"
-            f"<div class=sub>{html.escape(sub)}</div>"
+            f"<div class=sub>{html.escape(zutaten)}</div>"
             f"<p>{html.escape(desc)}</p>"
             "<div class=card-bottom>"
-            f"<span class=heat><span class=heat-label>Schärfe</span>{heat_pips(heat)}</span>"
+            "<span class=rohkost>100% Rohkost</span>"
             f"<button class=add data-name=\"{html.escape(name)}\">In den Korb</button>"
-            "</div>"
+            "</div></div>"
             "</article>"
         )
     body = (
         "<section class=hero>"
-        "<span class=kicker>Manufaktur seit 2019 &middot; Charge Nr. 47</span>"
-        "<h1>Sechs Soßen, <em>handgebrannt</em>, schief etikettiert.</h1>"
-        "<p class=lead>Wir kochen in kleinen Chargen, fuellen von Hand ab und "
-        "schreiben die Schaerfe ehrlich aufs Glas. Kein Abo, keine App, kein "
-        "Firlefanz &ndash; nur Soße. Stammkunden <a href='/login'>melden sich an</a> "
-        "und finden ihre Bestellungen wieder.</p>"
-        "<div class=hero-meta>"
-        "<span>frisch gebrannt</span><span class=dot>&bull;</span>"
-        "<span>ohne Konservierungszeug</span><span class=dot>&bull;</span>"
-        "<span>Glas, kein Plastik</span><span class=dot>&bull;</span>"
-        "<span>Schaerfe 1&ndash;5 ehrlich deklariert</span>"
-        "</div>"
+        "<span class=kicker>Kaltgepresst &middot; täglich frisch</span>"
+        "<h1>Saft, wie er sein soll.</h1>"
+        "<p class=lead>Sechs Sorten, roh gepresst, nichts zugesetzt.</p>"
+        "<a class=btn href='#sortiment'>Zu den Sorten</a>"
         "</section>"
         "<div class=section-head id=sortiment>"
-        "<h2>Was gerade im Regal steht</h2>"
-        f"<span class=count>{len(PRODUCTS)} Sorten</span>"
+        "<h2>Unsere Sorten</h2>"
+        f"<span class=count>{len(PRODUCTS)} im Kühlregal</span>"
         "</div>"
         f"<div class=grid>{cards}</div>"
     )
@@ -384,7 +372,7 @@ def page_account(session):
                  "Zum <a href='/admin'>Admin-Bereich</a>.</div>")
     else:
         body += ("<div class=note>Noch keine Bestellungen. "
-                 "Trau dich an die <a href='/#sortiment'>Letzte Mahnung</a>.</div>")
+                 "Probier mal den <a href='/#sortiment'>Wachmacher</a>.</div>")
     return layout("Mein Konto", body, session)
 
 
@@ -406,9 +394,9 @@ def page_admin_index(session):
 
 def page_admin_orders(session):
     rows = (
-        ("#1041", "Dorfbrand x2", "versandfertig"),
-        ("#1042", "Letzte Mahnung x1", "Kunde kontaktiert"),
-        ("#1043", "Oma's Geheimnis x6", "bezahlt"),
+        ("#1041", "Grüner Montag x2", "versandfertig"),
+        ("#1042", "Wachmacher x6", "Kunde kontaktiert"),
+        ("#1043", "Kokosnacht x3", "bezahlt"),
     )
     trs = "".join(
         f"<tr><td><code>{o}</code></td><td>{html.escape(item)}</td>"
@@ -469,7 +457,7 @@ def page_denied(session):
 
 def page_404(session):
     body = ("<h1>404</h1><p class=page-lead>Die Seite gibt es nicht. "
-            "Wie die Sorte 'mittelscharf'.</p>")
+            "Ausgepresst und weg.</p>")
     return layout("404", body, session)
 
 
@@ -477,7 +465,7 @@ def page_404(session):
 # HTTP-Handler
 # --------------------------------------------------------------------------- #
 class Handler(BaseHTTPRequestHandler):
-    server_version = "Scharfsinn/1.0"
+    server_version = "Pressbar/1.0"
 
     def log_message(self, fmt, *args):
         # Zugriffe loggen (hilfreich um Brute-Force live zu zeigen).
@@ -616,7 +604,7 @@ def main():
     init_db()
     port = int(CFG.get("PORT", "8000"))
     server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
-    print("Scharfsinn laeuft auf http://0.0.0.0:%d  (Strg+C zum Stoppen)" % port)
+    print("Pressbar laeuft auf http://0.0.0.0:%d  (Strg+C zum Stoppen)" % port)
     print("DB: %s" % DB_PATH)
     try:
         server.serve_forever()
