@@ -153,10 +153,7 @@ nav a.navlink:hover{color:var(--text);background:var(--surface0);text-decoration
 main{width:100%;padding:0 var(--pad) 72px}
 
 /* Hero - bewusst knapp gehalten */
-.hero{padding:70px 0 44px;margin-bottom:40px;position:relative}
-.hero::after{content:"";position:absolute;inset:0;z-index:-1;
-  background:radial-gradient(60% 130% at 82% -20%,rgba(151,117,250,.16),transparent 55%),
-             radial-gradient(50% 120% at 8% 10%,rgba(148,216,45,.10),transparent 55%)}
+.hero{padding:70px 0 44px;margin-bottom:40px}
 .kicker{display:inline-block;font-size:12px;font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:var(--mauve);margin:0 0 16px}
 .hero h1{font-size:clamp(38px,6vw,68px);line-height:1.02;margin:0 0 14px;
