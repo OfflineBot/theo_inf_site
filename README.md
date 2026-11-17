@@ -1,28 +1,41 @@
-# Scharfsinn – verwundbarer Demo-Shop
+# Pressbar – verwundbarer Demo-Shop
 
-Kleiner Hot-Sauce-Onlineshop, der mit Absicht löchrig ist. Gedacht als Spielwiese
+Kleiner Kaltpress-Saftladen, der mit Absicht löchrig ist. Gedacht als Spielwiese
 für eine Hacking-Präsentation an der Uni, mit vier Aufgaben für CTFd.
 
-Nur Python-Standardbibliothek, keine Installation nötig.
+Nur Python-Standardbibliothek, keine Abhängigkeiten.
 
 ## Starten
 
+### Variante A: direkt
 ```sh
 python3 app.py
 ```
 
-Läuft dann auf `http://0.0.0.0:8099` (Port in `.env` änderbar). Beim ersten Start
-wird `shop.db` automatisch angelegt. Für Port-Forwarding bindet der Server auf
-`0.0.0.0` – es gibt bewusst **keinen Rate-Limit- oder DDoS-Schutz**.
+### Variante B: Docker Compose (für den Server)
+```sh
+docker compose up -d --build     # bauen & starten
+docker compose logs -f           # Zugriffe / Brute-Force live mitlesen
+docker compose down              # stoppen
+```
 
-Zum Zurücksetzen einfach `shop.db` löschen, dann wird beim nächsten Start neu
-befüllt (praktisch, falls in der Präsi was schiefgeht).
+Läuft dann auf `http://0.0.0.0:8099` (Port in `.env`). Beim ersten Start wird
+`shop.db` automatisch angelegt. Der Server bindet auf `0.0.0.0` für
+Port-Forwarding – es gibt bewusst **keinen Rate-Limit- oder DDoS-Schutz**.
+
+Zum Zurücksetzen `shop.db` löschen (bzw. Container neu starten), dann wird neu
+befüllt.
+
+**Ports:** In `compose.yml` ist `8099:8099` gemappt. Der linke Wert ist der
+Host-Port (frei wählbar), der rechte muss zu `PORT` in `.env` passen. Die `.env`
+ist read-only in den Container gemountet – Passwort und Flags lassen sich so
+ohne Rebuild ändern.
 
 ## Seiten
 
 | Pfad             | Zweck                              | Schutz                        |
 |------------------|------------------------------------|-------------------------------|
-| `/`              | Shop-Startseite, Sortiment         | offen                         |
+| `/`              | Startseite, Sorten-Übersicht       | offen                         |
 | `/login`         | Anmeldung (SQL-Injection-Ziel)     | offen                         |
 | `/account`       | Kundenkonto nach Login             | Login nötig                   |
 | `/admin`         | Admin-Übersicht                    | nur Admin (korrekt)           |
@@ -30,14 +43,14 @@ befüllt (praktisch, falls in der Präsi was schiefgeht).
 | `/admin/users`   | Benutzerliste mit MD5-Hashes       | **offen – kaputt (BAC)**      |
 | `/admin/config`  | Systemkonfiguration                | nur Admin (korrekt)           |
 
-Es gibt keine Seite ohne Funktion. Die drei Admin-Unterseiten sind genau die
+Keine Seite ohne Funktion. Die drei Admin-Unterseiten sind genau die
 "2 von 3 offen"-Konstellation aus der Aufgabe.
 
 ## Accounts
 
 In `.env`:
 
-- `admin` / `sommer2024` (Rolle admin, schwach -> brute-forcebar)
+- `admin` / `sommer2024` (Rolle admin, schwach → brute-forcebar)
 
 In der DB (siehe `app.py`, `init_db`):
 
@@ -101,6 +114,14 @@ Flag: `FLAG{md5_zerbroeselt_wie_chips}`
 `ctfd_challenges.csv` im CTFd-Admin unter *Challenges → Import* (CSV) einlesen.
 Enthält Name, Kategorie, Punkte, Flag und Hints pro Aufgabe. Flags stammen 1:1
 aus `.env` – wenn du die Werte dort änderst, die CSV anpassen.
+
+## Dateien
+
+- `app.py` – der Server (Shop + alle Schwachstellen)
+- `.env` – Admin-Passwort, Flags, Port
+- `wordlists/demo.txt` – Wortliste mit den echten Passwörtern (Demo läuft offline)
+- `ctfd_challenges.csv` – Import für CTFd
+- `Dockerfile`, `compose.yml`, `.dockerignore` – Container-Setup
 
 ## Hinweis
 Alles hier ist absichtlich unsicher. Nicht ins offene Internet stellen, nur lokal
